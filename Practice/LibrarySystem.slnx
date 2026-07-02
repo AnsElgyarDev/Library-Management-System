@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="LibraryWinForms/LibraryWinForms.csproj" />
+  <Project Path="Practice.csproj" />
+</Solution>

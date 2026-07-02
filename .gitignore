@@ -1,0 +1,18 @@
+# --- .NET Artifacts ---
+[Bb]in/
+[Oo]bj/
+*.suo
+*.user
+*.sln.docstates
+
+# --- VS Code Configurations ---
+.vscode/
+
+# --- Data & Backup Files ---
+*.json
+*.zip
+*.rar
+
+# Exception: If you want to keep appsettings.json configuration
+!appsettings.json
+!appsettings.Development.json
