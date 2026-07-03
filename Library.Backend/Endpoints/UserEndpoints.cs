@@ -1,10 +1,10 @@
 using System.Net.Http.Headers;
 using FluentValidation.Validators;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Practice.Common;
-using Practice.DTO;
-using Practice.Model;
-using Practice.Service;
+using Library.Core.Common;
+using Library.Core.DTO;
+using Library.Core.Model;
+using Library.Core.Service;
 
 namespace Library.Core.Endpoints;
 public static class UserEndpoints

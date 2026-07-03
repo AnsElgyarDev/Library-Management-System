@@ -1,5 +1,5 @@
 using FluentValidation; 
-using Practice.DTO;
+using Library.Core.DTO;
 
 namespace Library.Core.Validators;
 

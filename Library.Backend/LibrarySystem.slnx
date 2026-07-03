@@ -1,4 +1,4 @@
 <Solution>
   <Project Path="LibraryWinForms/LibraryWinForms.csproj" />
-  <Project Path="Practice.csproj" />
+  <Project Path="Library.Core.csproj" />
 </Solution>

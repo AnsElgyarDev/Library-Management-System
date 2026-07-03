@@ -1,4 +1,4 @@
-using Practice.Model;
+using Library.Core.Model;
 
 namespace Library.Core.Repository;
 

@@ -1,7 +1,7 @@
-using Practice.Common;
-using Practice.DTO;
-using Practice.Model;
-using Practice.Repository;
+using Library.Core.Common;
+using Library.Core.DTO;
+using Library.Core.Model;
+using Library.Core.Repository;
 
 namespace Library.Core.Service;
 

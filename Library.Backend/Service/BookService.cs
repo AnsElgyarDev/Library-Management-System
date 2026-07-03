@@ -1,9 +1,9 @@
 using Mapster;
-using Practice.Repository;
-using Practice.DTO;
-using Practice.Helpers;
-using Practice.Model;
-using Practice.Common;
+using Library.Core.Repository;
+using Library.Core.DTO;
+using Library.Core.Helpers;
+using Library.Core.Model;
+using Library.Core.Common;
 
 namespace Library.Core.Service;
 

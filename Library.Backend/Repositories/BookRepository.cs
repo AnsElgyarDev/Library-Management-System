@@ -1,11 +1,11 @@
 using System.Text.Json;
-using Practice.Model;
+using Library.Core.Model;
 
 namespace Library.Core.Repository;
 
 class BookRepository : IBookRepository 
 {
-    public string FilePath = @"D:\Desktop\Practice\Practice\books.Json";
+    public string FilePath = @"D:\Desktop\Library Management System\Library.Backend\books.Json";
     public List<Book> GetAllBooks()
     {
         if(!File.Exists(FilePath))

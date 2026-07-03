@@ -1,11 +1,11 @@
 using System.Text.Json;
-using Practice.Model;
+using Library.Core.Model;
 
 namespace Library.Core.Repository;
 
 class UserRepository : IUserRepository 
 {
-    public string FilePath = @"D:\Desktop\Practice\Practice\users.Json";
+    public string FilePath = @"D:\Desktop\Library Management System\Library.Backend\users.Json";
 
     public List<User> GetAllUsers()
     {

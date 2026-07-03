@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Http.HttpResults;
-using Practice.Common;
-using Practice.DTO;
-using Practice.Model;
-using Practice.Service;
-using Practice.Validators;
+using Library.Core.Common;
+using Library.Core.DTO;
+using Library.Core.Model;
+using Library.Core.Service;
+using Library.Core.Validators;
 
 namespace Library.Core.Endpoints;
 public static class Endpoints

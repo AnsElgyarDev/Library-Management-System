@@ -2,9 +2,9 @@ using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using Mapster;
 using Microsoft.AspNetCore.RateLimiting;
-using Practice.DTO;
-using Practice.Model;
-using Practice.Repository;
+using Library.Core.DTO;
+using Library.Core.Model;
+using Library.Core.Repository;
 
 namespace Library.Core.Service;
 

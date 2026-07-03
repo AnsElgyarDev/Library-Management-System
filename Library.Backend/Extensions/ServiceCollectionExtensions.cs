@@ -1,8 +1,8 @@
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
-using Practice.Repository;
-using Practice.Service;
-using Practice.Validators;
+using Library.Core.Repository;
+using Library.Core.Service;
+using Library.Core.Validators;
 
 namespace Library.Core.Extensions;
 

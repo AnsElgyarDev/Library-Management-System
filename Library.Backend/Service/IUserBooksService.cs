@@ -1,5 +1,5 @@
-using Practice.DTO;
-using Practice.Model;
+using Library.Core.DTO;
+using Library.Core.Model;
 
 namespace Library.Core.Service;
 

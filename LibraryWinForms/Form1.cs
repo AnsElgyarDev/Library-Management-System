@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using Practice.Common;
-using Practice.DTO;
-using Practice.Model;
-using Practice.Service;
+using Library.Core.Common;
+using Library.Core.DTO;
+using Library.Core.Model;
+using Library.Core.Service;
 
 namespace LibraryWinForms;
 

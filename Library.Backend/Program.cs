@@ -1,8 +1,8 @@
 using FluentValidation;
-using Practice.Endpoints;
-using Practice.Middlewares;
-using Practice.Repository;
-using Practice.Service;
+using Library.Core.Endpoints;
+using Library.Core.Middlewares;
+using Library.Core.Repository;
+using Library.Core.Service;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
