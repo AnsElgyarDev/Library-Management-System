@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\Practice\Practice.csproj" />
+    <ProjectReference Include="..\Library.Backend\Library.Backend.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
