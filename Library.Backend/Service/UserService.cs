@@ -59,7 +59,7 @@ public class UserService : IUserService
         return userToUpdate;
     }
 
-    UserProfileDto IUserService.AddUser(CreateUserDto createUserDto)
+    public UserProfileDto AddUser(CreateUserDto createUserDto)
     {
         var users = _userRepository.GetAllUsers();
         var user = new User
@@ -70,6 +70,7 @@ public class UserService : IUserService
             Books = new List<Book>()
         };
         var userToAdd = user.Adapt<UserProfileDto>(); 
+        users.Add(user);
         _userRepository.SaveUsers(users);
         
         return userToAdd ;
