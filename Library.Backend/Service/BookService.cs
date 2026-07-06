@@ -4,6 +4,7 @@ using Library.Core.DTO;
 using Library.Core.Helpers;
 using Library.Core.Model;
 using Library.Core.Common;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Library.Core.Service;
 
@@ -14,9 +15,11 @@ public class BookService : IBookService
     // by importing from repository to get the List of the Books and serializing it.
     // public static string filePath = "books.Json";
     private readonly IBookRepository _bookRepository;
-    public BookService(IBookRepository bookRepository)
+    private readonly IUserRepository _userRepository;
+    public BookService(IBookRepository bookRepository,IUserRepository userRepository)
     {
         this._bookRepository = bookRepository;        
+        this._userRepository = userRepository;
     }
     public List<Book> GetAllBooks()
     {
@@ -78,43 +81,49 @@ public class BookService : IBookService
         
         return books.ToList();
     }
+    /*
+        borrowbook method must take the user who wants to borrow and make business logic to the books he has borrowed and also 
+        check whether the user are permitted to borrow or he would exceed the limit of the borrowed books  
+    */ 
 
-    public Result<Book> BorrowBook(IBookService bookService, int id)
-    {
-        var books = _bookRepository.GetAllBooks();
-        var bookToBorrow = books.FirstOrDefault(book => book.Id == id);
+    
+
+    // public Result<Book> BorrowBook(IBookService bookService, int id)
+    // {
+    //     var books = _bookRepository.GetAllBooks();
+    //     var bookToBorrow = books.FirstOrDefault(book => book.Id == id);
  
-        if(bookToBorrow is null)
-                return Result<Book>.GenericFailure("This book does not exist.", 404);   
+    //     if(bookToBorrow is null)
+    //             return Result<Book>.GenericFailure("This book does not exist.", 404);   
 
-        if(!bookToBorrow.IsAvailable)
-                return Result<Book>.GenericFailure("This is Book is Not Available.", 400);
+    //     if(!bookToBorrow.IsAvailable)
+    //             return Result<Book>.GenericFailure("This is Book is Not Available.", 400);
             
-        bookToBorrow?.IsAvailable = false;
-        _bookRepository.SaveBooks(books);
+    //     bookToBorrow?.IsAvailable = false;
+    //     _bookRepository.SaveBooks(books);
 
-        return Result<Book>.GenericSuccess(bookToBorrow, 200);
-    }
+    //     return Result<Book>.GenericSuccess(bookToBorrow, 200);
+    // }
 
-    public Result<Book> returnBook(IBookService bookService, int id)
-    {
-        var books = _bookRepository.GetAllBooks();
-        var bookToReturn = books.FirstOrDefault(book => book.Id == id);
+    // public Result<Book> returnBook(IBookService bookService, int id)
+    // {
+    //     var books = _bookRepository.GetAllBooks();
+    //     var bookToReturn = books.FirstOrDefault(book => book.Id == id);
             
-        if(bookToReturn is null)
-                return Result<Book>.GenericFailure("This book does not exist.", 404);
+    //     if(bookToReturn is null)
+    //             return Result<Book>.GenericFailure("This book does not exist.", 404);
         
-        if(bookToReturn?.IsAvailable == true)
-                return Result<Book>.GenericFailure("This book is Not Available", 400);
+    //     if(bookToReturn?.IsAvailable == true)
+    //             return Result<Book>.GenericFailure("This book is Not Available", 400);
 
-        bookToReturn?.IsAvailable = true;
-        _bookRepository.SaveBooks(books);
+    //     bookToReturn?.IsAvailable = true;
+    //     _bookRepository.SaveBooks(books);
 
-        return Result<Book>.GenericSuccess(bookToReturn, 404);
-    }
+    //     return Result<Book>.GenericSuccess(bookToReturn, 404);
+    // }
 
     public Result<List<Book>> SearchBooks
-    (IBookService bookService, string? Author = null, decimal? maxPrice = null)
+    (string? Author = null, decimal? maxPrice = null)
     {
         var books = _bookRepository.GetAllBooks().ToList();
         var filteredBooks = books;
@@ -136,5 +145,51 @@ public class BookService : IBookService
         }
         
         return Result<List<Book>>.GenericSuccess(filteredBooks, 200);
+    }
+
+    public BorrowResultStatus BorrowBook(int bookId, int userId)
+    {
+        var books = _bookRepository.GetAllBooks();
+        var users = _userRepository.GetAllUsers();
+        
+        var bookToBorrow = books.FirstOrDefault(book => book.Id == bookId);
+        var user = users.FirstOrDefault(user => user.Id == userId);
+
+        if (bookToBorrow is null) return BorrowResultStatus.BookNotFound;
+        if (!bookToBorrow.IsAvailable) return BorrowResultStatus.BookNotAvailable;
+        if (user is null) return BorrowResultStatus.UserNotFound;
+        if (user.BorrowedBooks >= 3) return BorrowResultStatus.UserLimitExceeded;
+
+        user.BorrowedBooks += 1;
+        user.Books.Add(bookToBorrow);
+        bookToBorrow.IsAvailable = false;
+
+        _bookRepository.SaveBooks(books);
+        _userRepository.SaveUsers(users);
+
+        return BorrowResultStatus.Success;
+    }
+    public ReturnResultStatus returnBook(int BookId, int UserId)
+    {
+        var books = _bookRepository.GetAllBooks();
+        var users = _userRepository.GetAllUsers();
+        var bookToReturn = books.FirstOrDefault(book => book.Id == BookId);
+        var user = users.FirstOrDefault(user => user.Id == UserId); 
+        var userBook = user?.Books?.FirstOrDefault(book => book.Id == BookId);
+
+        if (bookToReturn is null) return ReturnResultStatus.BookNotFound;
+        if (bookToReturn.IsAvailable) return ReturnResultStatus.BookAvailable;
+        if (user is null) return ReturnResultStatus.UserNotFound;
+        if(user.BorrowedBooks <= 0) return ReturnResultStatus.UserHasNoBorrowedBooks;
+        if(userBook is null) return ReturnResultStatus.UserBookNotFound;
+        
+        user.BorrowedBooks -= 1;
+        user.Books.Remove(userBook);
+        bookToReturn.IsAvailable = true;
+
+        _bookRepository.SaveBooks(books);
+        _userRepository.SaveUsers(users);
+        
+        return ReturnResultStatus.Success;
     }
 }

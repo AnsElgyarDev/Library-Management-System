@@ -13,7 +13,7 @@ public interface IBookService
     bool DeleteBook(int id);
     bool UpdateBook(CreateBookDto createBookDto, int id);
     List<Book> Pagination(int pageNo, int pageSize);
-    Result<Book> BorrowBook(IBookService bookService, int id);
-    Result<Book> returnBook(IBookService bookService, int id);
-    Result<List<Book>> SearchBooks(IBookService bookService, string? Author = null, decimal? maxPrice = null);
+    BorrowResultStatus BorrowBook(int BookId, int UserId);
+    ReturnResultStatus returnBook(int BookId, int UserId);
+    Result<List<Book>> SearchBooks(string? Author = null, decimal? maxPrice = null);
 }

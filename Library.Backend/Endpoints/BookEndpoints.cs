@@ -47,7 +47,7 @@ public static class Endpoints
         app.MapGet("/books/search", Results<NotFound, Ok<Result<List<Book>>>>
         (IBookService bookService, string? Author, decimal? maxPrice) =>
         {
-            var searchedBooks = bookService.SearchBooks(bookService, Author, maxPrice);
+            var searchedBooks = bookService.SearchBooks(Author, maxPrice);
             if(searchedBooks is null)
                 return TypedResults.NotFound();
 
@@ -61,36 +61,38 @@ public static class Endpoints
             return TypedResults.Created($"/books/{book.Id}", book);
         }).AddEndpointFilter<ValidationFilter<CreateBookDto>>();
 
-        app.MapPost("/books/{id}/borrow", (IBookService bookService, int id) =>
+        app.MapPost("User/{UserId}/books/{BookId}/borrow", Results<NotFound<string>, BadRequest<string>, Ok<string>>
+        (IBookService bookService, int UserId, int BookId) =>
         {
-            var result = bookService.BorrowBook(bookService, id);
-            
-            if(!result.isSuccess)
-            {
-                return Results.Json(new
-                {
-                     error = result.ErrorMessage
-                }, statusCode: result.StatusCode);
-            }
+            var result = bookService.BorrowBook(UserId, BookId);
 
-            return Results.Ok(result.Data);
+            return result switch
+            {
+                BorrowResultStatus.BookNotFound => TypedResults.NotFound("Book Not Found!"),
+                BorrowResultStatus.UserNotFound => TypedResults.NotFound("User Not Found!"),
+                BorrowResultStatus.BookNotAvailable => TypedResults.BadRequest("Book Not Available!"),
+                BorrowResultStatus.UserLimitExceeded => TypedResults.BadRequest("User Limit Exceeded!"),
+                BorrowResultStatus.Success => TypedResults.Ok("The Book Borrowed Successfully!"),
+                _ => TypedResults.BadRequest("An unexpected error occurred.") 
+            };
         });
 
-        app.MapPost("/books/{id}/return", (IBookService bookService, int id) =>
+        app.MapPost("User/{UserId}/books/{BookId}/return", Results<NotFound<string>, BadRequest<string>, Ok<string>>
+        (IBookService bookService, int UserId, int BookId) =>
         {
-            var result = bookService.returnBook(bookService, id);
-            
-            if(!result.isSuccess)
+            var result = bookService.returnBook(BookId, UserId);
+
+            return result switch
             {
-                return Results.Json(new
-                {
-                     error = result.ErrorMessage
-                }, statusCode: result.StatusCode);
-            }
-
-            return Results.Ok(result.Data);
+                ReturnResultStatus.BookNotFound => TypedResults.NotFound("Book Not Found!"),
+                ReturnResultStatus.UserNotFound => TypedResults.NotFound("User Not Found!"),
+                ReturnResultStatus.BookAvailable => TypedResults.BadRequest("This Book is already available in the library!"),
+                ReturnResultStatus.UserHasNoBorrowedBooks => TypedResults.BadRequest("This user doesn't have any borrowed books!"),
+                ReturnResultStatus.UserBookNotFound => TypedResults.BadRequest("This book was not borrowed by this user!"),
+                ReturnResultStatus.Success => TypedResults.Ok("The Book Returned Successfully!"),
+                _ => TypedResults.BadRequest("An unexpected error occurred.")
+            };
         });
-
         // Put Methods
         app.MapPut("/books/{id}", Results<NoContent, NotFound>
                   (IBookService bookService, CreateBookDto createBookDto, int id) =>
