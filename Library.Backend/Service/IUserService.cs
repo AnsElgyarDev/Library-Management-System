@@ -11,7 +11,7 @@ public interface IUserService
     */
     UserProfileDto AddUser(CreateUserDto createUserDto);
     List<UserProfileDto> GetUsers();
-    UserProfileDto GetUserById(int id);
+    UserProfileDto? GetUserById(int id);
     UserProfileDto? RemoveUser(int id);
     UserProfileDto? UpdateUser(int id, UpdateUserRoleDto updateUserRoleDto);
 }

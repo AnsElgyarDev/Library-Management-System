@@ -1,7 +1,4 @@
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Cryptography.X509Certificates;
 using Mapster;
-using Microsoft.AspNetCore.RateLimiting;
 using Library.Core.DTO;
 using Library.Core.Model;
 using Library.Core.Repository;
@@ -15,13 +12,14 @@ public class UserService : IUserService
     {
         this._userRepository = userRepository;
     }
-    public UserProfileDto GetUserById(int id)
+    public UserProfileDto? GetUserById(int id)
     {
         var user = _userRepository.GetAllUsers().FirstOrDefault(user => user.Id == id);
         if(user is null)
-            return null!;
+            return null;
         
         var userToReturn = user.Adapt<UserProfileDto>(); 
+        
         return userToReturn;
     }
 
