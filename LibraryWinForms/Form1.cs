@@ -66,7 +66,7 @@ public partial class Form1 : Form
 
     private static readonly HttpClient _httpClient = new()
     {
-        BaseAddress = new Uri("https://localhost:7200/")
+        BaseAddress = new Uri("http://localhost:5022/")
     };
 
     private enum ButtonKind { Primary, Danger, Secondary }
