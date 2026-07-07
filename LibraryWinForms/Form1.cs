@@ -6,6 +6,9 @@ using Library.Core.Common;
 using Library.Core.DTO;
 using Library.Core.Model;
 using Library.Core.Service;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace LibraryWinForms;
 
@@ -60,6 +63,11 @@ public partial class Form1 : Form
     private static readonly Font FontHeader = new("Segoe UI", 12f, FontStyle.Bold);
     private static readonly Font FontBody = new("Segoe UI", 10f);
     private static readonly Font FontBodyBold = new("Segoe UI", 10f, FontStyle.Bold);
+
+    private static readonly HttpClient _httpClient = new()
+    {
+        BaseAddress = new Uri("https://localhost:7200/")
+    };
 
     private enum ButtonKind { Primary, Danger, Secondary }
 
@@ -251,16 +259,36 @@ public partial class Form1 : Form
         }
     }
 
-    private void BtnBorrowBook_Click(object? sender, EventArgs e)
+    private async void BtnBorrowBook_Click(object? sender, EventArgs e)
     {
-        if (!TryGetId(_txtBookId.Text, out var id))
+        if (!TryGetId(_txtBookId.Text, out var bookId))
             return;
+
+        // No User ID field exists on the Books tab, so we reuse the one on
+        // the Users tab. Ask the user to fill it in first if it's empty.
+        if (!TryGetId(_txtUserId.Text, out var userId))
+        {
+            ShowWarning("Enter a User ID in the Users tab first, then try borrowing again.");
+            return;
+        }
 
         try
         {
-            Result<Book> result = _bookService.BorrowBook(_bookService, id);
-            HandleResult(result, book => $"'{book.Name}' borrowed successfully.");
-            RefreshBooksGrid();
+            using var response = await _httpClient.PostAsync($"User/{userId}/books/{bookId}/borrow", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ShowInfo("Book borrowed successfully.");
+                RefreshBooksGrid();
+                return;
+            }
+
+            var status = await TryParseEnumFromResponse<BorrowResultStatus>(response);
+            ShowWarning(MapBorrowStatusMessage(status, response.StatusCode));
+        }
+        catch (HttpRequestException ex)
+        {
+            ShowError(ex);
         }
         catch (Exception ex)
         {
@@ -268,22 +296,104 @@ public partial class Form1 : Form
         }
     }
 
-    private void BtnReturnBook_Click(object? sender, EventArgs e)
+    private async void BtnReturnBook_Click(object? sender, EventArgs e)
     {
-        if (!TryGetId(_txtBookId.Text, out var id))
+        if (!TryGetId(_txtBookId.Text, out var bookId))
             return;
+
+        if (!TryGetId(_txtUserId.Text, out var userId))
+        {
+            ShowWarning("Enter a User ID in the Users tab first, then try returning again.");
+            return;
+        }
 
         try
         {
-            Result<Book> result = _bookService.returnBook(_bookService, id);
-            HandleResult(result, book => $"'{book.Name}' returned successfully.");
-            RefreshBooksGrid();
+            using var response = await _httpClient.PostAsync($"User/{userId}/books/{bookId}/return", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ShowInfo("Book returned successfully.");
+                RefreshBooksGrid();
+                return;
+            }
+
+            var status = await TryParseEnumFromResponse<ReturnResultStatus>(response);
+            ShowWarning(MapReturnStatusMessage(status, response.StatusCode));
+        }
+        catch (HttpRequestException ex)
+        {
+            ShowError(ex);
         }
         catch (Exception ex)
         {
             ShowError(ex);
         }
     }
+
+    /// <summary>
+    /// Tries to read the enum status out of the response body. Handles a bare
+    /// quoted/unquoted enum name, or a JSON object with a "status" or "result"
+    /// property. Returns null if nothing recognizable was found.
+    /// </summary>
+    private static async Task<TEnum?> TryParseEnumFromResponse<TEnum>(HttpResponseMessage response)
+        where TEnum : struct, Enum
+    {
+        var content = await response.Content.ReadAsStringAsync();
+        if (string.IsNullOrWhiteSpace(content))
+            return null;
+
+        var trimmed = content.Trim().Trim('"');
+
+        if (Enum.TryParse<TEnum>(trimmed, ignoreCase: true, out var direct))
+            return direct;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(content);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var propName in new[] { "status", "result", "value" })
+                {
+                    if (doc.RootElement.TryGetProperty(propName, out var prop) &&
+                        Enum.TryParse<TEnum>(prop.GetString(), ignoreCase: true, out var parsed))
+                    {
+                        return parsed;
+                    }
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Not JSON — fall through to null.
+        }
+
+        return null;
+    }
+
+    private static string MapBorrowStatusMessage(BorrowResultStatus? status, System.Net.HttpStatusCode statusCode) =>
+        status switch
+        {
+            BorrowResultStatus.BookNotFound => "That book could not be found.",
+            BorrowResultStatus.BookNotAvailable => "That book is not available to borrow right now.",
+            BorrowResultStatus.UserNotFound => "That user could not be found.",
+            BorrowResultStatus.UserLimitExceeded => "This user has reached their borrowing limit.",
+            _ => statusCode == System.Net.HttpStatusCode.NotFound
+                ? "The book or user could not be found."
+                : "The borrow request could not be completed."
+        };
+
+    private static string MapReturnStatusMessage(ReturnResultStatus? status, System.Net.HttpStatusCode statusCode) =>
+        status switch
+        {
+            ReturnResultStatus.BookNotFound => "That book could not be found.",
+            ReturnResultStatus.BookAvailable => "That book is already marked as available (not currently borrowed).",
+            ReturnResultStatus.UserNotFound => "That user could not be found.",
+            ReturnResultStatus.UserBookNotFound => "This user doesn't have that book borrowed.",
+            _ => statusCode == System.Net.HttpStatusCode.NotFound
+                ? "The book or user could not be found."
+                : "The return request could not be completed."
+        };
 
     private void BtnSearchBooks_Click(object? sender, EventArgs e)
     {
@@ -302,7 +412,7 @@ public partial class Form1 : Form
 
         try
         {
-            Result<List<Book>> result = _bookService.SearchBooks(_bookService, author, maxPrice);
+            Result<List<Book>> result = _bookService.SearchBooks(author, maxPrice);
             if (!result.isSuccess)
             {
                 ShowWarning(result.ErrorMessage ?? "No books matched your search.");

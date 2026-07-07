@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 */ 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(); 
-builder.Services.AddSingleton<IBookService, BookService>(); 
+builder.Services.AddScoped<IBookService, BookService>(); 
 builder.Services.AddScoped<IUserBooksServices, UserBooksService>(); 
 builder.Services.AddScoped<IUserService, UserService>(); 
 builder.Services.AddScoped<IUserRepository, UserRepository>(); 
